@@ -197,23 +197,6 @@ Responsável por:
 
 ---
 
-## Execução
-
-### Cron
-
-Utilizado para agendar execuções automáticas do monitoramento.
-
-Exemplo:
-
-```
-Todos os dias às 08:00
-
-Executar:
-scrapy crawl product
-```
-
----
-
 # Estrutura do Projeto
 
 ```
@@ -252,3 +235,141 @@ Possíveis evoluções:
 - execução utilizando Docker;
 
 ---
+
+## Configuração e Execução
+
+Esta seção descreve como configurar e executar o projeto localmente utilizando Docker, PostgreSQL e Scrapy.
+
+---
+
+# Pré-requisitos
+
+Antes de iniciar, você precisa ter instalado:
+
+- Docker
+- Docker Compose
+- Python 3.10+
+- pip
+
+---
+
+# Subindo o banco de dados (PostgreSQL)
+
+O projeto utiliza Docker para subir o banco de dados.
+
+Execute na raiz do projeto:
+
+```bash
+docker compose up -d
+```
+
+Isso irá iniciar o container do PostgreSQL com as seguintes configurações:
+
+- Banco: `products`
+- Usuário: `scraper`
+- Senha: `senha123`
+- Porta: `5432`
+
+---
+
+# Variáveis de ambiente
+
+O sistema utiliza variáveis de ambiente para definir quais produtos serão monitorados.
+
+Exemplo:
+
+```bash
+export AMAZON_PRODUCT_URLS="https://site1.com/produto,https://site2.com/produto"
+```
+
+Cada URL deve ser separada por vírgula.
+
+---
+
+# Executando o scraper
+
+Após configurar o banco e as variáveis de ambiente, execute o crawler:
+
+```bash
+scrapy crawl product
+```
+
+---
+
+# O que acontece ao executar
+
+Ao rodar o scraper, o fluxo é o seguinte:
+
+```
+Variáveis de ambiente (PRODUCT_URLS)
+            ↓
+      Scrapy Spider
+            ↓
+   Extração de dados (nome, preço, URL)
+            ↓
+        Pipeline
+            ↓
+      Repository (SQLAlchemy)
+            ↓
+     PostgreSQL (Docker)
+```
+
+---
+
+# Persistência dos dados
+
+O sistema armazena dois tipos de informação:
+
+## Produtos monitorados
+
+Tabela `products`:
+
+- id
+- name
+- url
+- store
+- created_at
+
+---
+
+## Histórico de preços
+
+Tabela `price_history`:
+
+- id
+- product_id
+- price
+- checked_at
+
+---
+
+# Execução automatizada (Cron)
+
+Para rodar o monitoramento automaticamente diariamente:
+
+```bash
+0 8 * * * AMAZON_PRODUCT_URLS="..." scrapy crawl product
+```
+
+---
+
+# Exemplo completo de execução
+
+```bash
+# 1. subir banco
+docker compose up -d
+
+# 2. exportar URLs
+export PRODUCT_URLS="https://site.com/produto1,https://site.com/produto2"
+
+# 3. rodar scraper
+scrapy crawl product
+```
+
+---
+
+# Observações
+
+- O scraper foi projetado para uso pessoal e monitoramento de preços.
+- Cada execução cria um registro no histórico de preços.
+- O sistema pode ser evoluído para envio de alertas e dashboard web.
