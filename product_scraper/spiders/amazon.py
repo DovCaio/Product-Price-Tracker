@@ -23,5 +23,7 @@ class AmazonScrapper(scrapy.Spider):
                 ".a-price-whole::text"
             ).get(),
 
-            url=response.url
+            url=response.url,
+
+            store="amazon"
         )

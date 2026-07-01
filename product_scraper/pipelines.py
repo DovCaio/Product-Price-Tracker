@@ -1,13 +1,14 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
-
-# useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
+from product_scraper.storage.database import init_database
+from product_scraper.storage.repository import ProductRepository
 
 
 class ProductScraperPipeline:
+    def __init__(self):
+        init_database()
+
+        self.repository = ProductRepository()
+
     def process_item(self, item, spider):
+        self.repository.save(item)
         return item
